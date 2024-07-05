@@ -1,7 +1,15 @@
 "use strict";
 
 const express = require("express");
+const { apiKey, permission } = require("../auth/checkAuth");
 const router = express.Router();
+
+// check apiKey
+router.use(apiKey);
+//check permissions
+router.use(permission("0000"));
+
+// check permissions
 
 // SignUp
 router.use("/api/v1", require("./access"));
