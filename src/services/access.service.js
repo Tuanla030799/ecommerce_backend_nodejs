@@ -5,8 +5,9 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const { createKeyToken } = require("./keyToken.service");
 const { createTokenPair } = require("../auth/authUtils");
-const { getInfoData } = require("../utils");
-const { BadRequestError } = require("../core/error.response");
+const { getInfoData, getKeyTokenPair } = require("../utils");
+const { BadRequestError, AuthFailureError } = require("../core/error.response");
+const { findByEmail } = require("./shop.service");
 
 const RoleShop = {
   SHOP: "000", // SHOP
@@ -16,6 +17,29 @@ const RoleShop = {
 };
 
 class AccessService {
+  /**
+   * 1 - check email in dbs
+   * 2 - match password
+   * 3 - create AT vs RT and save
+   * 4 - generate tokens
+   * 5 - get data and return login
+   */
+  static login = async ({ email, password, refreshToken = null }) => {
+    //1.
+    const foundShop = await findByEmail({ email });
+    if (!foundShop) throw new BadRequestError("shop not registered");
+    //2.
+    const match = bcrypt.compare(foundShop.password, password);
+    if (!match) throw new AuthFailureError("Authentication error");
+    //3.
+    const { privateKey, publicKey } = getKeyTokenPair();
+    //4.
+    const tokens = await createTokenPair(
+      { userId: foundShop._id, email },
+      publicKey,
+      privateKey
+    );
+  };
   static signUp = async ({ name, email, password }) => {
     // step1: check email exists ??
     const holderShop = await shopModel.findOne({ email }).lean();
@@ -48,8 +72,7 @@ class AccessService {
       //   },
       // });
 
-      const privateKey = crypto.randomBytes(64).toString("hex");
-      const publicKey = crypto.randomBytes(64).toString("hex");
+      const { privateKey, publicKey } = getKeyTokenPair();
 
       // public key crypt graph standard
       const keyStores = await createKeyToken({
