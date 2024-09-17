@@ -15,7 +15,7 @@ class SuccessResponse {
     this.metadata = metadata;
   }
 
-  send(res, headers = {}) {
+  async send(res, headers = {}) {
     return res.status(this.status).json(this);
   }
 }
@@ -42,4 +42,5 @@ class CREATED extends SuccessResponse {
 module.exports = {
   OK,
   CREATED,
+  SuccessResponse,
 };

@@ -17,7 +17,7 @@ class KeyTokenService {
       // });
       // return tokens ? tokens.publicKey : null;
       // lv xxx
-      const filter = { user: userID },
+      const filter = { user: userId },
         update = {
           publicKey,
           privateKey,

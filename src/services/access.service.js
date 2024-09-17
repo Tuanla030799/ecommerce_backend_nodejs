@@ -34,12 +34,29 @@ class AccessService {
     //3.
     const { privateKey, publicKey } = getKeyTokenPair();
     //4.
+    const { _id: userId } = foundShop;
     const tokens = await createTokenPair(
-      { userId: foundShop._id, email },
+      { userId, email },
       publicKey,
       privateKey
     );
+
+    await createKeyToken({
+      refreshToken: tokens.refreshToken,
+      privateKey,
+      publicKey,
+      userId,
+    });
+
+    return {
+      shop: getInfoData({
+        fields: ["_id", "name", "email"],
+        object: foundShop,
+      }),
+      tokens,
+    };
   };
+
   static signUp = async ({ name, email, password }) => {
     // step1: check email exists ??
     const holderShop = await shopModel.findOne({ email }).lean();
